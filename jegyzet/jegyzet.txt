@@ -1,0 +1,6 @@
+2023.03.31.
+Mesh generálás példakódok: mfem/miniapps/meshing/...
+- a meshnek gyakorlatilag csak az alakját kell jól leírni fileba, a megoldóprogram még finomíthatja tovább, az sincs a fileban definiálva, hogy milyen típusú elemekből áll a mesh, csak az alakjuk adott.
+- az ex0.cpp példakódban le vannak írva a mesh beolvasástól a megoldásig a lépések:
+    1. 
+

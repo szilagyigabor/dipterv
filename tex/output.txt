@@ -140,9 +140,17 @@ eladatkiiras.pdf>] (./tartalom/cimlap.tex
 ogo.pdf>]) (./tartalom/tartalomjegyzek.tex
 No file dipterv.toc.
 ) [1] (./tartalom/nyilatkozat.tex [1]) (./tartalom/kivonat.tex [1] [2])
-(./tartalom/bevezetes.tex) [1] (./tartalom/ertelmezes.tex)
-(./tartalom/elozmenyek.tex) (./tartalom/tervezes.tex) (./tartalom/ertekeles.tex
-)
+(./tartalom/bevezetes.tex
+1. fejezet.
+) [1] (./tartalom/ertelmezes.tex
+2. fejezet.
+) [2] (./tartalom/elozmenyek.tex
+3. fejezet.
+) [3] (./tartalom/tervezes.tex
+4. fejezet.
+) [4] (./tartalom/ertekeles.tex
+5. fejezet.
+) [5]
 No file dipterv.bbl.
 (./tartalom/fuggelek.tex)
 
@@ -168,7 +176,7 @@ l/texlive/2022/texmf-dist/fonts/type1/public/cm-super/sfrm0800.pfb></usr/local/
 texlive/2022/texmf-dist/fonts/type1/public/cm-super/sfrm1200.pfb></usr/local/te
 xlive/2022/texmf-dist/fonts/type1/public/cm-super/sfrm1440.pfb></usr/local/texl
 ive/2022/texmf-dist/fonts/type1/public/cm-super/sfti1200.pfb>
-Output written on dipterv.pdf (7 pages, 274836 bytes).
+Output written on dipterv.pdf (11 pages, 278506 bytes).
 Transcript written on dipterv.log.
 This is BibTeX, Version 0.99d (TeX Live 2022)
 The top-level auxiliary file: dipterv.aux
@@ -321,13 +329,21 @@ eladatkiiras.pdf>] (./tartalom/cimlap.tex
 (/usr/local/texlive/2022/texmf-dist/tex/latex/amsfonts/umsb.fd) [1 <./kep/bme_l
 ogo.pdf>]) (./tartalom/tartalomjegyzek.tex (./dipterv.toc)) [1]
 (./tartalom/nyilatkozat.tex [1]) (./tartalom/kivonat.tex [1] [2])
-(./tartalom/bevezetes.tex) [1] (./tartalom/ertelmezes.tex)
-(./tartalom/elozmenyek.tex) (./tartalom/tervezes.tex) (./tartalom/ertekeles.tex
-) (./dipterv.bbl
+(./tartalom/bevezetes.tex
+1. fejezet.
+) [1] (./tartalom/ertelmezes.tex
+2. fejezet.
+) [2] (./tartalom/elozmenyek.tex
+3. fejezet.
+) [3] (./tartalom/tervezes.tex
+4. fejezet.
+) [4] (./tartalom/ertekeles.tex
+5. fejezet.
+) [5] (./dipterv.bbl
 
 LaTeX Warning: Empty `thebibliography' environment on input line 96.
 
-) [2] (./tartalom/fuggelek.tex)
+) [6] (./tartalom/fuggelek.tex)
 
 Package caption Warning: Unused \captionsetup[figure] on input line 23.
 See the caption package documentation for explanation.
@@ -346,7 +362,7 @@ l/texlive/2022/texmf-dist/fonts/type1/public/cm-super/sfrm0800.pfb></usr/local/
 texlive/2022/texmf-dist/fonts/type1/public/cm-super/sfrm1200.pfb></usr/local/te
 xlive/2022/texmf-dist/fonts/type1/public/cm-super/sfrm1440.pfb></usr/local/texl
 ive/2022/texmf-dist/fonts/type1/public/cm-super/sfti1200.pfb>
-Output written on dipterv.pdf (8 pages, 276723 bytes).
+Output written on dipterv.pdf (12 pages, 283126 bytes).
 Transcript written on dipterv.log.
 This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex)
  restricted \write18 enabled.
@@ -493,13 +509,21 @@ eladatkiiras.pdf>] (./tartalom/cimlap.tex
 (/usr/local/texlive/2022/texmf-dist/tex/latex/amsfonts/umsb.fd) [1 <./kep/bme_l
 ogo.pdf>]) (./tartalom/tartalomjegyzek.tex (./dipterv.toc)) [1]
 (./tartalom/nyilatkozat.tex [1]) (./tartalom/kivonat.tex [1] [2])
-(./tartalom/bevezetes.tex) [1] (./tartalom/ertelmezes.tex)
-(./tartalom/elozmenyek.tex) (./tartalom/tervezes.tex) (./tartalom/ertekeles.tex
-) (./dipterv.bbl
+(./tartalom/bevezetes.tex
+1. fejezet.
+) [1] (./tartalom/ertelmezes.tex
+2. fejezet.
+) [2] (./tartalom/elozmenyek.tex
+3. fejezet.
+) [3] (./tartalom/tervezes.tex
+4. fejezet.
+) [4] (./tartalom/ertekeles.tex
+5. fejezet.
+) [5] (./dipterv.bbl
 
 LaTeX Warning: Empty `thebibliography' environment on input line 96.
 
-) [2] (./tartalom/fuggelek.tex)
+) [6] (./tartalom/fuggelek.tex)
 
 Package caption Warning: Unused \captionsetup[figure] on input line 23.
 See the caption package documentation for explanation.
@@ -518,5 +542,5 @@ l/texlive/2022/texmf-dist/fonts/type1/public/cm-super/sfrm0800.pfb></usr/local/
 texlive/2022/texmf-dist/fonts/type1/public/cm-super/sfrm1200.pfb></usr/local/te
 xlive/2022/texmf-dist/fonts/type1/public/cm-super/sfrm1440.pfb></usr/local/texl
 ive/2022/texmf-dist/fonts/type1/public/cm-super/sfti1200.pfb>
-Output written on dipterv.pdf (8 pages, 276723 bytes).
+Output written on dipterv.pdf (12 pages, 283126 bytes).
 Transcript written on dipterv.log.
