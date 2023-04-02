@@ -4,3 +4,7 @@ Mesh generálás példakódok: mfem/miniapps/meshing/...
 - az ex0.cpp példakódban le vannak írva a mesh beolvasástól a megoldásig a lépések:
     1. 
 
+
+2023.04.02.
+Egy parallel mesh-t úgy lehet értelmesen megjeleníteni, hogy ha mesh.000000, mesh.000001, ... alakban vannak elmentve a mesh darabok és sol.000000, ... alakban a megoldások rajtuk, akkor mesh-nek csak "mesh"-t adok meg, függvénynek meg csak "sol"-t. A -k "RAjlmm" opció plusz az F11/F12 szép szétrobbantott ábrát ad 2D-ben.
+
