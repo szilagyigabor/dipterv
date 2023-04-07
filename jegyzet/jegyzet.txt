@@ -8,3 +8,7 @@ Mesh generálás példakódok: mfem/miniapps/meshing/...
 2023.04.02.
 Egy parallel mesh-t úgy lehet értelmesen megjeleníteni, hogy ha mesh.000000, mesh.000001, ... alakban vannak elmentve a mesh darabok és sol.000000, ... alakban a megoldások rajtuk, akkor mesh-nek csak "mesh"-t adok meg, függvénynek meg csak "sol"-t. A -k "RAjlmm" opció plusz az F11/F12 szép szétrobbantott ábrát ad 2D-ben.
 
+2023.04.07.
+A "symplectic integration" valami olyan időlépéses technika, amiben azonos időpillanatokban értelmesek az E és B terek. Ehhez kétféle végeselemet használ a program ugyanazon a meshen (H(Div) és H(Curl) - Nedelec). A mesh generálás nagyon macerás. Használható lehet, ha Quadrilateral típusú (téglalap/téglatest) non-conformal mesh-t használok, amin lehet egész jól használni a "mesh-optimizer" miniappot úgy, hogy ha definiálok különböző anyagokat meghatározó függvényt, akkor az anyaghatárokon adaptívan sűrít.
+A lényeg, hogy a mesh generálást ki kell találni. Először elég, ha valami nagyon durva hálót csinálok, aminél legalább conformal illeszkedés van a különböző részek között.
+Valószínűleg használható külső program mesh generálásra: Cubit vagy GMSH
