@@ -3,3 +3,5 @@ forras
 szim/tesztprogram/main
 szim/tesztprogram/geom
 szim/tesztprogram/szim
+*.mesh
+*.gf

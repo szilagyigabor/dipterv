@@ -9,8 +9,9 @@
 using namespace std;
 using namespace mfem;
 
+// number of nodes in x or y directions
 #define NX 10
-#define NY 10
+#define NY 12
 
 int main(int argc, char *argv[])
 {
@@ -28,12 +29,10 @@ int main(int argc, char *argv[])
     OptionsParser args(argc, argv);
     args.AddOption(&new_mesh_file, "-m", "--mesh-out-file",
                    "Output Mesh file to write.");
-    args.AddOption(&nw, "-nw", "--num-elements-width",
-                   "Number of elements along width.");
-    args.AddOption(&nl, "-nl", "--num-elements-length",
-                   "Number of elements along length.");
-    args.AddOption(&order, "-o", "--mesh-order",
-                   "Order (polynomial degree) of the mesh elements.");
+//    args.AddOption(&nw, "-nw", "--num-elements-width",
+//                   "Number of elements along width.");
+//    args.AddOption(&nl, "-nl", "--num-elements-length",
+//                   "Number of elements along length.");
     args.Parse();
     if (!args.Good())
     {
@@ -49,7 +48,6 @@ int main(int argc, char *argv[])
     //Mesh mesh = Mesh(2,4,1);
     
     Mesh *mesh = new Mesh(2,0,0);
-
     // rectangle of 2 by 2 elements which have size dx and dy
     // vertices indexed like this:
     // 0,0 0,1 0,2
@@ -71,22 +69,24 @@ int main(int argc, char *argv[])
     {
         for(int j=0; j<NX-1; j++)
         {
-            vert_ind[i][j] = mesh->AddQuad(
+            mesh->AddQuad(
                     vert_ind[i][j], vert_ind[i+1][j], vert_ind[i+1][j+1], vert_ind[i][j+1], attr);
         }
     }
     // add boundary edges on top and bottom
     for(int i=0; i<NX-1; i++)
     {
-        mesh->AddBdrSegment(vert_ind[0][i], vert_ind[0][i+1], attr);
-        mesh->AddBdrSegment(vert_ind[NY-1][i], vert_ind[NY-1][i+1], attr);
+        mesh->AddBdrSegment(vert_ind[0][i+1], vert_ind[0][i], 2);
+        mesh->AddBdrSegment(vert_ind[NY-1][NX-2-i], vert_ind[NY-1][NX-1-i], 3);
+    }
+    // add boundary edges on right and left side
+    for(int i=0; i<NY-1; i++)
+    {
+        mesh->AddBdrSegment(vert_ind[NY-2-i][0], vert_ind[NY-1-i][0], 4);
+        mesh->AddBdrSegment(vert_ind[i+1][NX-1], vert_ind[i][NX-1], 5);
     }
     
-    
-
-
     mesh->FinalizeQuadMesh();
-    
 
     ofstream ofs("discontinuity.mesh");
     ofs.precision(8);
