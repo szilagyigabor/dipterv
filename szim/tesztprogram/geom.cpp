@@ -9,6 +9,9 @@
 using namespace std;
 using namespace mfem;
 
+#define NX 10
+#define NY 10
+
 int main(int argc, char *argv[])
 {
     // default values for command line parameters
@@ -42,15 +45,55 @@ int main(int argc, char *argv[])
     // set finite element space to quads
     Element::Type el_type = Element::QUADRILATERAL;
     // generate initial mesh
-    Mesh mesh = Mesh::MakeCartesian2D(nw, nl, el_type, 1, max(fw,sw), fl+sl);
+    //Mesh mesh = Mesh::MakeCartesian2D(nw, nl, el_type, 1, max(fw,sw), fl+sl);
     //Mesh mesh = Mesh(2,4,1);
-    mesh.Finalize();
+    
+    Mesh *mesh = new Mesh(2,0,0);
+
+    // rectangle of 2 by 2 elements which have size dx and dy
+    // vertices indexed like this:
+    // 0,0 0,1 0,2
+    // 1,0 1,1 1,2
+    // 2,0 2,1 2,2
+    double dx = 1.0, dy = 1.0;
+    int attr = 1;
+    int vert_ind[NY][NX];
+    // add vertices
+    for(int i=0; i<NY; i++)
+    {
+        for(int j=0; j<NX; j++)
+        {
+            vert_ind[i][j] = mesh->AddVertex(i*dy, j*dx, attr);
+        }
+    }
+    // add Quad elements
+    for(int i=0; i<NY-1; i++)
+    {
+        for(int j=0; j<NX-1; j++)
+        {
+            vert_ind[i][j] = mesh->AddQuad(
+                    vert_ind[i][j], vert_ind[i+1][j], vert_ind[i+1][j+1], vert_ind[i][j+1], attr);
+        }
+    }
+    // add boundary edges on top and bottom
+    for(int i=0; i<NX-1; i++)
+    {
+        mesh->AddBdrSegment(vert_ind[0][i], vert_ind[0][i+1], attr);
+        mesh->AddBdrSegment(vert_ind[NY-1][i], vert_ind[NY-1][i+1], attr);
+    }
+    
     
 
-    ofstream ofs(new_mesh_file);
+
+    mesh->FinalizeQuadMesh();
+    
+
+    ofstream ofs("discontinuity.mesh");
     ofs.precision(8);
-    mesh.Print(ofs);
+    mesh->Print(ofs);
     ofs.close();
+
+    delete mesh;
 
     return 0;
 }

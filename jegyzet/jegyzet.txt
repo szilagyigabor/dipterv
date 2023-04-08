@@ -12,3 +12,13 @@ Egy parallel mesh-t úgy lehet értelmesen megjeleníteni, hogy ha mesh.000000, 
 A "symplectic integration" valami olyan időlépéses technika, amiben azonos időpillanatokban értelmesek az E és B terek. Ehhez kétféle végeselemet használ a program ugyanazon a meshen (H(Div) és H(Curl) - Nedelec). A mesh generálás nagyon macerás. Használható lehet, ha Quadrilateral típusú (téglalap/téglatest) non-conformal mesh-t használok, amin lehet egész jól használni a "mesh-optimizer" miniappot úgy, hogy ha definiálok különböző anyagokat meghatározó függvényt, akkor az anyaghatárokon adaptívan sűrít.
 A lényeg, hogy a mesh generálást ki kell találni. Először elég, ha valami nagyon durva hálót csinálok, aminél legalább conformal illeszkedés van a különböző részek között.
 Valószínűleg használható külső program mesh generálásra: Cubit vagy GMSH
+
+2023.04.08.
+MFEM-en belül mesh felépítés: (polar-nc.cpp meshing miniapp)
+ - mfem::Mesh::Mesh(int Dim_, int NVert, intNElem, intNBdrElem=0, intspaceDim_=-1) // mesh létrehozás, Dim_=2 vagy 3
+ - int vertex_index = mesh->AddVertex(double x, double y); 
+ - a példakód egy Array<Params2> listában tárolja el a koordinátákat meg egy 0-t
+ - mesh->AddBdrSegment(csúcspont indexek, attribute) vagy AddBdr{Point,Element,stb}-vel kell megadni a határoló felületet
+ - mesh->Add{Quad,Triangle,stb}(csúcsok indexei)-vel lehet a végeselemeket hozzáadni
+ - mesh->FinalizeMesh(); kell a végén
+ - ofstream ofs("mesh file neve"); ofs.precision(8); mesh->Print(ofs); a mesh elmentéséhez
