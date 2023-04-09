@@ -16,23 +16,25 @@ using namespace mfem;
 int main(int argc, char *argv[])
 {
     // default values for command line parameters
+    // width -> y coord, length -> x coord
     const char *new_mesh_file = "discontinuity.mesh";
     double fw = 0.04;
     double sw = 0.02;
+    double offset = 0.0;
     double fl = 0.1;
     double sl = 0.1;
-    int nw = 8;
-    int nl = 30;
+    int nw = 3;
+    int nl = 2;
     int order = 1;
     
     // process command line parameters
     OptionsParser args(argc, argv);
     args.AddOption(&new_mesh_file, "-m", "--mesh-out-file",
                    "Output Mesh file to write.");
-//    args.AddOption(&nw, "-nw", "--num-elements-width",
-//                   "Number of elements along width.");
-//    args.AddOption(&nl, "-nl", "--num-elements-length",
-//                   "Number of elements along length.");
+    args.AddOption(&nw, "-nw", "--num-elements-width",
+                   "Number of elements along width. (Must be at least 3)");
+    args.AddOption(&nl, "-nl", "--num-elements-length",
+                   "Number of elements along length. (Must be at least 2)");
     args.Parse();
     if (!args.Good())
     {
@@ -40,6 +42,18 @@ int main(int argc, char *argv[])
        return 1;
     }
     args.PrintOptions(cout);
+    if(nw<3 || nl<2)
+    {
+        printf("\nError: Number of widthwise elements (-nw)must be at least 3 and mnumber of lengthwise elements (-nl) must be at least 2.\n");
+        return 1;
+    }
+    double wider_width = max(fw,sw), narrower_width = min(fw,sw);
+    if(ofs > ())
+    {
+        printf("\nError: Number of widthwise elements (-nw)must be at least 3 and mnumber of lengthwise elements (-nl) must be at least 2.\n");
+        return 1;
+    }
+
     
     // set finite element space to quads
     Element::Type el_type = Element::QUADRILATERAL;
@@ -56,7 +70,64 @@ int main(int argc, char *argv[])
     double dx = 1.0, dy = 1.0;
     int attr = 1;
     int vert_ind[NY][NX];
-    // add vertices
+    
+    // calculate node coords and number of nodes
+    Array<double> xcoord(nw+1);
+    Array<double> ycoord(nl+1);
+    bool first_is_wider = fw>sw;
+    if(fw < sw) offset *= -1.0;
+    double bot_width = (wider_width-narrower_width)/2.0+offset;
+    double top_width = (wider_width-narrower_width)/2.0-offset;
+    // number of widthwise elements that stick out on the bottom of the wider piece (at least one)
+    int num_w_el_bot = max(1, nw*(int)(round(bot_width/wider_width)));
+    // number of widthwise elements for the narrower piece (at least one)
+    int num_w_el_mid = max(1, min(nw-2,nw*(int)(round(narrower_width/wider_width))));
+    // number of widthwise elements that stick out on the top of the wider piece (at least one)
+    int num_w_el_top = nw-num_w_el_bot-num_w_el_mid;
+    double dy_bot = bot_width/(double)(num_w_el_bot);
+    double dy_mid = narrower_width/(double)(num_w_el_mid);
+    double dy_top = top_width/(double)(num_w_el_top);
+    // add node y coords that define the bottom part
+    double y = -dy_bot;
+    for(int i=0; i<num_w_el_bot+1; i++)
+    {
+        y += dy_bot;
+        ycoord.Append(y);
+    }
+    // add node y coords that define the middle part
+    for(int i=0; i<num_w_el_mid; i++)
+    {
+        y += dy_mid;
+        ycoord.Append(y);
+    }
+    // add node y coords that define the top part
+    for(int i=0; i<num_w_el_top; i++)
+    {
+        y += dy_top;
+        ycoord.Append(y);
+    }
+    // number of lengthwise elements of the first part
+    int num_l_el_first = max(1, nl*(int)(round(fl/(fl+sl))));
+    // number of lengthwise elements of the second part
+    int num_l_el_second = nl-num_l_el_first;
+    double dx_first = fl/(double)(num_l_el_first);
+    double dx_second = sl/(double)(num_l_el_second);
+    // add node x coords that define the first part
+    double x = -dx_first;
+    for(int i=0; i<num_w_el_first+1; i++)
+    {
+        x += dx_first;
+        xcoord.Append(x);
+    }
+    // add node x coords that define the second part
+    for(int i=0; i<num_l_el_second; i++)
+    {
+        x += dx_second;
+        xcoord.Append(x);
+    }
+
+
+    // add vertices for "first" transmission line piece
     for(int i=0; i<NY; i++)
     {
         for(int j=0; j<NX; j++)
@@ -69,8 +140,8 @@ int main(int argc, char *argv[])
     {
         for(int j=0; j<NX-1; j++)
         {
-            mesh->AddQuad(
-                    vert_ind[i][j], vert_ind[i+1][j], vert_ind[i+1][j+1], vert_ind[i][j+1], attr);
+            mesh->AddQuad(vert_ind[i][j], vert_ind[i+1][j],
+                    vert_ind[i+1][j+1], vert_ind[i][j+1], attr);
         }
     }
     // add boundary edges on top and bottom
