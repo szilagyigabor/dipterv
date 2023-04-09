@@ -1,7 +1,6 @@
 forras
 *.swp
-szim/tesztprogram/main
-szim/tesztprogram/geom
-szim/tesztprogram/szim
+szim/geom
+szim/szim
 *.mesh
 *.gf
