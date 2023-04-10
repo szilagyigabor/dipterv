@@ -48,9 +48,9 @@ int main(int argc, char *argv[])
         return 1;
     }
     double wider_width = max(fw,sw), narrower_width = min(fw,sw);
-    if(ofs > ())
+    if(offset >= (wider_width-narrower_width)/2.0)
     {
-        printf("\nError: Number of widthwise elements (-nw)must be at least 3 and mnumber of lengthwise elements (-nl) must be at least 2.\n");
+        printf("\nError: offset absolute value is too large\n");
         return 1;
     }
 
@@ -62,14 +62,6 @@ int main(int argc, char *argv[])
     //Mesh mesh = Mesh(2,4,1);
     
     Mesh *mesh = new Mesh(2,0,0);
-    // rectangle of 2 by 2 elements which have size dx and dy
-    // vertices indexed like this:
-    // 0,0 0,1 0,2
-    // 1,0 1,1 1,2
-    // 2,0 2,1 2,2
-    double dx = 1.0, dy = 1.0;
-    int attr = 1;
-    int vert_ind[NY][NX];
     
     // calculate node coords and number of nodes
     Array<double> xcoord(nw+1);
@@ -114,7 +106,7 @@ int main(int argc, char *argv[])
     double dx_second = sl/(double)(num_l_el_second);
     // add node x coords that define the first part
     double x = -dx_first;
-    for(int i=0; i<num_w_el_first+1; i++)
+    for(int i=0; i<num_l_el_first+1; i++)
     {
         x += dx_first;
         xcoord.Append(x);
@@ -126,38 +118,60 @@ int main(int argc, char *argv[])
         xcoord.Append(x);
     }
 
+	// add middle part for both segments
+	Array2D<int> vi(nw+1,nl+1); // vertex indices
+	for(int row=0; row<num_w_el_mid; row++)
+	{
+		// add two left vertices of the first element of the row
+    	vi[0][num_w_el_bot+row] =
+			mesh->AddVertex(xcoord[0], ycoord[num_w_el_bot+row]);
+    	vi[0][num_w_el_bot+row+1] =
+			mesh->AddVertex(xcoord[0], ycoord[num_w_el_bot+row+1]);
+		// add the rest of the vertices and the elements of the row
+		for(int col=0; col<nl; col++)
+		{
+    		vi[col+1][num_w_el_bot+row] =
+        		mesh->AddVertex(xcoord[col+1], ycoord[num_w_el_bot+row]);
+    		vi[col+1][num_w_el_bot+row+1] =
+        		mesh->AddVertex(xcoord[col+1], ycoord[num_w_el_bot+row+1]);
+			mesh->AddQuad
+		}
+		// add voundary edges on the two ends of the middle part (in the x/lentgh direction)
+		//TODO
+	}
 
-    // add vertices for "first" transmission line piece
-    for(int i=0; i<NY; i++)
-    {
-        for(int j=0; j<NX; j++)
-        {
-            vert_ind[i][j] = mesh->AddVertex(i*dy, j*dx, attr);
-        }
-    }
-    // add Quad elements
-    for(int i=0; i<NY-1; i++)
-    {
-        for(int j=0; j<NX-1; j++)
-        {
-            mesh->AddQuad(vert_ind[i][j], vert_ind[i+1][j],
-                    vert_ind[i+1][j+1], vert_ind[i][j+1], attr);
-        }
-    }
-    // add boundary edges on top and bottom
-    for(int i=0; i<NX-1; i++)
-    {
-        mesh->AddBdrSegment(vert_ind[0][i+1], vert_ind[0][i], 2);
-        mesh->AddBdrSegment(vert_ind[NY-1][NX-2-i], vert_ind[NY-1][NX-1-i], 3);
-    }
-    // add boundary edges on right and left side
-    for(int i=0; i<NY-1; i++)
-    {
-        mesh->AddBdrSegment(vert_ind[NY-2-i][0], vert_ind[NY-1-i][0], 4);
-        mesh->AddBdrSegment(vert_ind[i+1][NX-1], vert_ind[i][NX-1], 5);
-    }
-    
-    mesh->FinalizeQuadMesh();
+
+//    // add vertices for "first" transmission line piece
+//    for(int i=0; i<NY; i++)
+//    {
+//        for(int j=0; j<NX; j++)
+//        {
+//            vert_ind[i][j] = mesh->AddVertex(i*dy, j*dx, attr);
+//        }
+//    }
+//    // add Quad elements
+//    for(int i=0; i<NY-1; i++)
+//    {
+//        for(int j=0; j<NX-1; j++)
+//        {
+//            mesh->AddQuad(vert_ind[i][j], vert_ind[i+1][j],
+//                    vert_ind[i+1][j+1], vert_ind[i][j+1], attr);
+//        }
+//    }
+//    // add boundary edges on top and bottom
+//    for(int i=0; i<NX-1; i++)
+//    {
+//        mesh->AddBdrSegment(vert_ind[0][i+1], vert_ind[0][i], 2);
+//        mesh->AddBdrSegment(vert_ind[NY-1][NX-2-i], vert_ind[NY-1][NX-1-i], 3);
+//    }
+//    // add boundary edges on right and left side
+//    for(int i=0; i<NY-1; i++)
+//    {
+//        mesh->AddBdrSegment(vert_ind[NY-2-i][0], vert_ind[NY-1-i][0], 4);
+//        mesh->AddBdrSegment(vert_ind[i+1][NX-1], vert_ind[i][NX-1], 5);
+//    }
+//    
+//    mesh->FinalizeQuadMesh();
 
     ofstream ofs("discontinuity.mesh");
     ofs.precision(8);
