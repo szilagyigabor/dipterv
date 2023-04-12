@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
     double fl = 10;
     double sl = 10;
     int nw = 3;
-    int nl = 3;
+    int nl = 2;
     int order = 1;
     
     // process command line parameters
@@ -123,7 +123,7 @@ int main(int argc, char *argv[])
 	//printf("%f, %f, %f, %f, %f, %f\n", dy_bot, dy_mid, dy_top, dx_first, dx_second, 1.0/0.0);
 	// add middle part for both segments
 	Array2D<int> vi(nw+1,nl+1); // vertex indices
-	// add bottom edge vertices of the middle section
+	// add bottom vertices of the middle section
 	for(int col=0; col<nl+1; col++)
 	{
 		vi[num_w_el_bot][col] =
@@ -145,47 +145,91 @@ int main(int argc, char *argv[])
 		// add boundary edges on the two ends of the middle section (in the x/lentgh direction)
 		// boundary has attribute=2 on the x=0 side (port 1), attr.=3 on the other end (port 2)
 		// and attr.=1 on the walls
-		//mesh->AddBdrSegment(vi[row][0], vi[row+1][0], 2);
-		//mesh->AddBdrSegment(vi[row][nl], vi[row+1][nl], 3);
+		mesh->AddBdrSegment(vi[row][0], vi[row+1][0], 2);
+		mesh->AddBdrSegment(vi[row][nl], vi[row+1][nl], 3);
 	}
-	vi.Print();
-	printf("xcoord:\n");
-	xcoord.Print(out, 10);
-	printf("ycoord:\n");
-	ycoord.Print(out, 10);
-	
 
-//    // add vertices for "first" transmission line piece
-//    for(int i=0; i<NY; i++)
-//    {
-//        for(int j=0; j<NX; j++)
-//        {
-//            vert_ind[i][j] = mesh->AddVertex(i*dy, j*dx, attr);
-//        }
-//    }
-//    // add Quad elements
-//    for(int i=0; i<NY-1; i++)
-//    {
-//        for(int j=0; j<NX-1; j++)
-//        {
-//            mesh->AddQuad(vert_ind[i][j], vert_ind[i+1][j],
-//                    vert_ind[i+1][j+1], vert_ind[i][j+1], attr);
-//        }
-//    }
-//    // add boundary edges on top and bottom
-//    for(int i=0; i<NX-1; i++)
-//    {
-//        mesh->AddBdrSegment(vert_ind[0][i+1], vert_ind[0][i], 2);
-//        mesh->AddBdrSegment(vert_ind[NY-1][NX-2-i], vert_ind[NY-1][NX-1-i], 3);
-//    }
-//    // add boundary edges on right and left side
-//    for(int i=0; i<NY-1; i++)
-//    {
-//        mesh->AddBdrSegment(vert_ind[NY-2-i][0], vert_ind[NY-1-i][0], 4);
-//        mesh->AddBdrSegment(vert_ind[i+1][NX-1], vert_ind[i][NX-1], 5);
-//    }
-//    
-    mesh->Finalize();
+	// add the top and bottom sections to the wider part
+	// determine where is the wider part
+	int wide_start, wide_end;
+	int narrow_start, narrow_end;
+	int attr_start, attr_end;
+	if(first_is_wider)
+	{
+		wide_start = 0;
+		wide_end = num_l_el_first;
+		narrow_start = num_l_el_first;
+		narrow_end = nl;
+		attr_start = 2;
+		attr_end = 1;
+	}
+	else
+	{
+		wide_start = num_l_el_first;
+		wide_end = nl;
+		narrow_start = 0;
+		narrow_end = num_l_el_first;
+		attr_start = 1;
+		attr_end = 3;
+	}
+    // add elements on top of the wider part
+	for(int row=num_w_el_bot+num_w_el_mid; row<nw; row++)
+	{
+		// add top left vertex of the first element of the row
+    	vi[row+1][0] =
+			mesh->AddVertex(xcoord[0], ycoord[row+1]);
+		// add the rest of the vertices and the elements of the row
+		for(int col=wide_start; col<wide_end; col++)
+		{
+    		vi[row+1][col+1] =
+        		mesh->AddVertex(xcoord[col+1], ycoord[row+1]);
+			mesh->AddQuad(vi[row][col], vi[row+1][col],
+				vi[row+1][col+1], vi[row][col+1]);
+		}
+		// add boundary edges on the two ends of the top section (in the x/lentgh direction)
+		// boundary has attribute=2 on the x=0 side (port 1), attr.=3 on the other end (port 2)
+		// and attr.=1 on the walls
+		mesh->AddBdrSegment(vi[row][wide_start], vi[row+1][wide_start], attr_start);
+		mesh->AddBdrSegment(vi[row][wide_end], vi[row+1][wide_end], attr_end);
+	}
+	// add elements on bottom of the wider part
+	for(int row=num_w_el_bot; row>0; row--)
+	{
+		// add bottom left vertex of the first element of the row
+    	vi[row-1][0] =
+			mesh->AddVertex(xcoord[0], ycoord[row-1]);
+		// add the rest of the vertices and the elements of the row
+		for(int col=wide_start; col<wide_end; col++)
+		{
+    		vi[row-1][col+1] =
+        		mesh->AddVertex(xcoord[col+1], ycoord[row-1]);
+			mesh->AddQuad(vi[row][col], vi[row-1][col],
+				vi[row-1][col+1], vi[row][col+1]);
+		}
+		// add boundary edges on the two ends of the top section (in the x/lentgh direction)
+		// boundary has attribute=2 on the x=0 side (port 1), attr.=3 on the other end (port 2)
+		// and attr.=1 on the walls
+		mesh->AddBdrSegment(vi[row][wide_start], vi[row-1][wide_start], attr_start);
+		mesh->AddBdrSegment(vi[row][wide_end], vi[row-1][wide_end], attr_end);
+	}
+
+	// add boundary edges of the top and bottom segments
+//	for(int col=wide_start; col<wide_end; col++)
+//	{
+//		mesh->AddBdrSegment(vi[nw][col], vi[nw][col+1], 1);
+//		mesh->AddBdrSegment(vi[0][col], vi[0][col+1], 1);
+//	}
+//
+//	// add boundaries on the top and bottom edge of the narrower part
+//	for(int col=narrow_start; col<narrow_end; col++)
+//	{
+//		mesh->AddBdrSegment(vi[num_w_el_bot][col],
+//			vi[num_w_el_bot][col+1], 1);
+//		mesh->AddBdrSegment(vi[num_w_el_bot+num_w_el_mid][col],
+//			vi[num_w_el_bot+num_w_el_mid][col+1], 1);
+//	}
+
+    mesh->FinalizeQuadMesh();
 
     ofstream ofs("discontinuity.mesh");
     ofs.precision(8);
