@@ -9,10 +9,6 @@
 using namespace std;
 using namespace mfem;
 
-// number of nodes in x or y directions
-#define NX 10
-#define NY 12
-
 int main(int argc, char *argv[])
 {
     // default values for command line parameters
@@ -58,9 +54,6 @@ int main(int argc, char *argv[])
     // set finite element space to quads
     Element::Type el_type = Element::QUADRILATERAL;
     // generate initial mesh
-    //Mesh mesh = Mesh::MakeCartesian2D(nw, nl, el_type, 1, max(fw,sw), fl+sl);
-    //Mesh mesh = Mesh(2,4,1);
-    
     Mesh *mesh = new Mesh(2,0,0);
     
     // calculate node coords and number of nodes
@@ -79,7 +72,7 @@ int main(int argc, char *argv[])
     double dy_bot = bot_width/(double)(num_w_el_bot);
     double dy_mid = narrower_width/(double)(num_w_el_mid);
     double dy_top = top_width/(double)(num_w_el_top);
-    printf("num_w_el_bot: %d\nnum_w_el_mid: %d\nnum_w_el_top: %d\n", num_w_el_bot, num_w_el_mid, num_w_el_top);
+    //printf("num_w_el_bot: %d\nnum_w_el_mid: %d\nnum_w_el_top: %d\n", num_w_el_bot, num_w_el_mid, num_w_el_top);
     // add node y coords that define the bottom part
     double y = 0.0;
     for(int i=0; i<num_w_el_bot+1; i++)
@@ -105,7 +98,7 @@ int main(int argc, char *argv[])
     int num_l_el_first = max(1, min(nl-1, (int)(round((double)nl*fl/(fl+sl)))));
 	// number of lengthwise elements of the second part
     int num_l_el_second = nl-num_l_el_first;
-    printf("num_l_el_first: %d\nnum_l_el_second: %d\n", num_l_el_first, num_l_el_second);
+    //printf("num_l_el_first: %d\nnum_l_el_second: %d\n", num_l_el_first, num_l_el_second);
     double dx_first = fl/(double)(num_l_el_first);
     double dx_second = sl/(double)(num_l_el_second);
     // add node x coords that define the first part
@@ -123,12 +116,6 @@ int main(int argc, char *argv[])
         xcoord[i]=x;
     }
 
-//    for(int i=0; i<nl+1; i++)
-//    {
-//        printf("x:%lf\n", xcoord[i]);
-//        printf("y:%lf\n", ycoord[i]);
-//    }
-
 	// add middle part for both segments
 	Array2D<int> vi(nw+1,nl+1); // vertex indices
 	// add bottom vertices of the middle section
@@ -145,7 +132,6 @@ int main(int argc, char *argv[])
 		// add the rest of the vertices and the elements of the row
 		for(int col=0; col<nl; col++)
 		{
-            printf("row: %d, col: %d\n", row, col);
     		vi[row+1][col+1] =
         		mesh->AddVertex(xcoord[col+1], ycoord[row+1]);
 			mesh->AddQuad(vi[row][col], vi[row+1][col],
@@ -166,18 +152,18 @@ int main(int argc, char *argv[])
 	if(first_is_wider)
 	{
 		wide_start = 0;
-		wide_end = num_l_el_first+1;
+		wide_end = num_l_el_first;
 		narrow_start = num_l_el_first;
-		narrow_end = nl+1;
+		narrow_end = nl;
 		attr_start = 2;
 		attr_end = 1;
 	}
 	else
 	{
 		wide_start = num_l_el_first;
-		wide_end = nl+1;
+		wide_end = nl;
 		narrow_start = 0;
-		narrow_end = num_l_el_first+1;
+		narrow_end = num_l_el_first;
 		attr_start = 1;
 		attr_end = 3;
 	}
@@ -222,21 +208,21 @@ int main(int argc, char *argv[])
 		mesh->AddBdrSegment(vi[row][wide_end], vi[row-1][wide_end], attr_end);
 	}
 
-//	// add boundary edges of the top and bottom segments
-//	for(int col=wide_start; col<wide_end; col++)
-//	{
-//		mesh->AddBdrSegment(vi[nw][col], vi[nw][col+1], 1);
-//		mesh->AddBdrSegment(vi[0][col], vi[0][col+1], 1);
-//	}
-//
-//	// add boundaries on the top and bottom edge of the narrower part
-//	for(int col=narrow_start; col<narrow_end; col++)
-//	{
-//		mesh->AddBdrSegment(vi[num_w_el_bot][col],
-//			vi[num_w_el_bot][col+1], 1);
-//		mesh->AddBdrSegment(vi[num_w_el_bot+num_w_el_mid][col],
-//			vi[num_w_el_bot+num_w_el_mid][col+1], 1);
-//	}
+	// add boundary edges of the top and bottom segments
+	for(int col=wide_start; col<wide_end; col++)
+	{
+		mesh->AddBdrSegment(vi[nw][col], vi[nw][col+1], 1);
+		mesh->AddBdrSegment(vi[0][col], vi[0][col+1], 1);
+	}
+
+	// add boundaries on the top and bottom edge of the narrower part
+	for(int col=narrow_start; col<narrow_end; col++)
+	{
+		mesh->AddBdrSegment(vi[num_w_el_bot][col],
+			vi[num_w_el_bot][col+1], 1);
+		mesh->AddBdrSegment(vi[num_w_el_bot+num_w_el_mid][col],
+			vi[num_w_el_bot+num_w_el_mid][col+1], 1);
+	}
 
 //    Array2D<int> vi(2, 3);
 //    vi[0][0] = mesh->AddVertex(0.0, 0.0);
