@@ -16,12 +16,11 @@ int main(int argc, char *argv[])
     const char *new_mesh_file = "discontinuity.mesh";
     double fw = 4.0;
     double sw = 2.0;
-    double offset = 0.0;
+    double os = 0.0;
     double fl = 7.0;
     double sl = 7.0;
     int nw = 3;
     int nl = 2;
-    int order = 1;
     
     // process command line parameters
     OptionsParser args(argc, argv);
@@ -31,6 +30,16 @@ int main(int argc, char *argv[])
                    "Number of elements along width. (Must be at least 3)");
     args.AddOption(&nl, "-nl", "--num-elements-length",
                    "Number of elements along length. (Must be at least 2)");
+    args.AddOption(&fw, "-fw", "--first-width",
+                   "Width of first section.");
+    args.AddOption(&sw, "-sw", "--second-width",
+                   "Width of second section.");
+    args.AddOption(&os, "-os", "--offset",
+                   "Offset of the second element from the center.");
+    args.AddOption(&fw, "-fw", "--first-width",
+                   "Width of first element.");
+    args.AddOption(&sw, "-sw", "--second-width",
+                   "Width-of-second-element.");
     args.Parse();
     if (!args.Good())
     {
@@ -44,9 +53,9 @@ int main(int argc, char *argv[])
         return 1;
     }
     double wider_width = max(fw,sw), narrower_width = min(fw,sw);
-    if(offset >= (wider_width-narrower_width)/2.0)
+    if(os >= (wider_width-narrower_width)/2.0)
     {
-        printf("\nError: offset absolute value is too large\n");
+        printf("\nError: os absolute value is too large\n");
         return 1;
     }
 
@@ -60,9 +69,9 @@ int main(int argc, char *argv[])
     Array<double> xcoord(nl+1);
     Array<double> ycoord(nw+1);
     bool first_is_wider = fw>sw;
-    if(!first_is_wider) offset *= -1.0;
-    double bot_width = (wider_width-narrower_width)/2.0+offset;
-    double top_width = (wider_width-narrower_width)/2.0-offset;
+    if(!first_is_wider) os *= -1.0;
+    double bot_width = (wider_width-narrower_width)/2.0+os;
+    double top_width = (wider_width-narrower_width)/2.0-os;
     // number of widthwise elements that stick out on the bottom of the wider piece (at least one)
     int num_w_el_bot = max(1, min(nw-2, (int)(round((double)nw*bot_width/wider_width))));
     // number of widthwise elements for the narrower piece (at least one)

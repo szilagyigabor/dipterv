@@ -22,3 +22,10 @@ MFEM-en belül mesh felépítés: (polar-nc.cpp meshing miniapp)
  - mesh->Add{Quad,Triangle,stb}(csúcsok indexei)-vel lehet a végeselemeket hozzáadni
  - mesh->FinalizeMesh(); kell a végén
  - ofstream ofs("mesh file neve"); ofs.precision(8); mesh->Print(ofs); a mesh elmentéséhez
+
+2023.04.23.
+Kész a meshelés 2D-re. 2D-ben lehet választani, hogy másodrendű ODE-t oldok meg, vagy két csatolt elsőrendűt (E-re és B-re) célszerűen.
+	dE/dt = 1/(mu*epsilon) rotH
+	dB/dt = -rotE
+vagy
+	d^2B/dt^2 = divgradB
