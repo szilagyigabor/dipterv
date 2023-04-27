@@ -12,11 +12,11 @@ int main(int argc, char *argv[])
     Hypre::Init();
  
     const char *mesh_file = "discontinuity.mesh";
-    //int sOrder = 1;
+    int sOrder = 1;
     //int tOrder = 1;
     int serial_ref_levels = 0;
     int parallel_ref_levels = 0;
-    //bool visualization = true;
+    bool visualization = true;
     double dt = 1.0e-12;
     double dtsf = 0.95;
     //double ti = 0.0;
@@ -29,8 +29,8 @@ int main(int argc, char *argv[])
     OptionsParser args(argc, argv);
     args.AddOption(&mesh_file, "-m", "--mesh",
                     "Mesh file to use.");
-//   args.AddOption(&sOrder, "-so", "--spatial-order",
-//                  "Finite element order (polynomial degree).");
+    args.AddOption(&sOrder, "-so", "--spatial-order",
+                   "Finite element order (polynomial degree).");
 //   args.AddOption(&tOrder, "-to", "--temporal-order",
 //                  "Time integration order.");
    args.AddOption(&serial_ref_levels, "-rs", "--serial-ref-levels",
@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
     // Read the (serial) mesh from the given mesh file on all processors.  We can
     // handle triangular, quadrilateral, tetrahedral, hexahedral, surface and
     // volume meshes with the same code.
-    Mesh *mesh;
+    Mesh *serial_mesh;
     ifstream imesh(mesh_file);
     if (!imesh)
     {
@@ -89,31 +89,55 @@ int main(int argc, char *argv[])
         }
         return 2;
     }
-    mesh = new Mesh(imesh, 1, 1);
+    serial_mesh = new Mesh(imesh, 1, 1);
     imesh.close();
     
     // Refine the serial mesh on all processors to increase the resolution. In
     // this example we do 'ref_levels' of uniform refinement.
     for (int l = 0; l < serial_ref_levels; l++)
     {
-        mesh->UniformRefinement();
+        serial_mesh->UniformRefinement();
     }
  
     // Define a parallel mesh by a partitioning of the serial mesh. Refine this
     // mesh further in parallel to increase the resolution. Once the parallel
     // mesh is defined, the serial mesh can be deleted.
-    ParMesh pmesh(MPI_COMM_WORLD, *mesh);
-    delete mesh;
+    ParMesh mesh(MPI_COMM_WORLD, *serial_mesh);
+    serial_mesh->Clear();
  
     // Refine this mesh in parallel to increase the resolution.
     for (int l = 0; l < parallel_ref_levels; l++)
     {
-        pmesh.UniformRefinement();
+        mesh.UniformRefinement();
     }
 
-
-    // program
+    /********************** program *********************/
     
+    // FE space for magnetix field
+    ND_FECollection B_fec(sOrder, mesh.Dimension());
+    ParFiniteElementSpace B_fespace(&mesh, &B_fec);
+    HYPRE_BigInt B_num_dofs = B_fespace.GlobalTrueVSize();
+
+    // FE space for magnetic field
+    L2_FECollection E_fec(sOrder, mesh.Dimension());
+    ParFiniteElementSpace E_fespace(&mesh, &E_fec);
+    HYPRE_BigInt E_num_dofs = E_fespace.GlobalTrueVSize();
+
+    if (Mpi::Root())
+    {
+        cout << "Number of E field unknowns: " << E_num_dofs << endl
+            << "Number of B field unknowns: " << B_num_dofs << endl;
+    }
+    
+    // get E field boundaries
+    Array<int> E_dirichlet_boundary_dofs, E_neumann_1_boundary_dofs, E_neumann_2_boundary_dofs;
+    fespace.GetBoundaryTrueDofs(dirichlet_boundary_dofs, 1); // 1: dirichlet boundaries
+    fespace.GetBoundaryTrueDofs(neumann_1_boundary_dofs, 2); // 2: first port
+    fespace.GetBoundaryTrueDofs(neumann_2_boundary_dofs, 3); // 3: second port
+    
+    // B field boundary conditions
+
+    /******************* program vége *******************/
 
     return 0;
 }

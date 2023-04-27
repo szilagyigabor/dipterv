@@ -29,3 +29,6 @@ Kész a meshelés 2D-re. 2D-ben lehet választani, hogy másodrendű ODE-t oldok
 	dB/dt = -rotE
 vagy
 	d^2B/dt^2 = divgradB
+
+2023.04.27.
+...
