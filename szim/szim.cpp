@@ -1,4 +1,4 @@
-#include "mfem.hpp"
+#include "pod_solver.hpp"
 #include <stdio.h>
 
 using namespace std;
@@ -131,11 +131,18 @@ int main(int argc, char *argv[])
     
     // get E field boundaries
     Array<int> E_dirichlet_boundary_dofs, E_neumann_1_boundary_dofs, E_neumann_2_boundary_dofs;
-    fespace.GetBoundaryTrueDofs(dirichlet_boundary_dofs, 1); // 1: dirichlet boundaries
-    fespace.GetBoundaryTrueDofs(neumann_1_boundary_dofs, 2); // 2: first port
-    fespace.GetBoundaryTrueDofs(neumann_2_boundary_dofs, 3); // 3: second port
+    E_fespace.GetBoundaryTrueDofs(E_dirichlet_boundary_dofs, 1); // 1: dirichlet boundaries
+    E_fespace.GetBoundaryTrueDofs(E_neumann_1_boundary_dofs, 2); // 2: first port
+    E_fespace.GetBoundaryTrueDofs(E_neumann_2_boundary_dofs, 3); // 3: second port
     
-    // B field boundary conditions
+    // get B field boundaries
+    // maybe not needed, for now, no absrobing boundaries
+    Array<int> B_dirichlet_boundary_dofs, B_neumann_1_boundary_dofs, B_neumann_2_boundary_dofs;
+    B_fespace.GetBoundaryTrueDofs(B_dirichlet_boundary_dofs, 1); // 1: dirichlet boundaries
+    B_fespace.GetBoundaryTrueDofs(B_neumann_1_boundary_dofs, 2); // 2: first port
+    B_fespace.GetBoundaryTrueDofs(B_neumann_2_boundary_dofs, 3); // 3: second port
+
+    // 
 
     /******************* program vége *******************/
 
