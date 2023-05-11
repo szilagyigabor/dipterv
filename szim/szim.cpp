@@ -1,150 +1,213 @@
-#include "pod_solver.hpp"
+#include "mfem.hpp"
 #include <stdio.h>
+
+#define MU0 1.25663706212e-6
+#define EPS0 8.8541878128e-12
 
 using namespace std;
 using namespace mfem;
 //using namespace mfem::common;
 
+// initial E field based on position "x"
+double EFieldFunc(const Vector &);
+double JFieldFunc(const Vector &, double);
+void BFieldFunc(const Vector &, Vector &);
+double muInvFunc(const Vector &);
+
 int main(int argc, char *argv[])
 {
-    
-    Mpi::Init();
-    Hypre::Init();
- 
-    const char *mesh_file = "discontinuity.mesh";
-    int sOrder = 1;
-    //int tOrder = 1;
-    int serial_ref_levels = 0;
-    int parallel_ref_levels = 0;
-    bool visualization = true;
-    double dt = 1.0e-12;
-    double dtsf = 0.95;
-    //double ti = 0.0;
-    //double ts = 1.0;
-    //double tf = 40.0;
- 
-    Array<int> abcs;
-    Array<int> dbcs;
- 
-    OptionsParser args(argc, argv);
-    args.AddOption(&mesh_file, "-m", "--mesh",
-                    "Mesh file to use.");
-    args.AddOption(&sOrder, "-so", "--spatial-order",
-                   "Finite element order (polynomial degree).");
+
+	const char *mesh_file = "discontinuity.mesh";
+	int order = 1;
+	//int tOrder = 1;
+	int serial_ref_levels = 0;
+	bool visualization = true;
+	double dt = 1.0e-12;
+	double dtsf = 0.95;
+	//double ti = 0.0;
+	//double ts = 1.0;
+	//double tf = 40.0;
+
+	Array<int> abcs;
+	Array<int> dbcs;
+
+	OptionsParser args(argc, argv);
+	args.AddOption(&mesh_file, "-m", "--mesh",
+					"Mesh file to use.");
+	args.AddOption(&order, "-o", "--order",
+				  "Finite element order (polynomial degree).");
 //   args.AddOption(&tOrder, "-to", "--temporal-order",
-//                  "Time integration order.");
+//				  "Time integration order.");
    args.AddOption(&serial_ref_levels, "-rs", "--serial-ref-levels",
-                  "Number of serial refinement levels.");
-   args.AddOption(&parallel_ref_levels, "-rp", "--parallel-ref-levels",
-                  "Number of parallel refinement levels.");
+				  "Number of serial refinement levels.");
 //   args.AddOption(&dtsf, "-sf", "--dt-safety-factor",
-//                  "Used to reduce the time step below the upper bound.");
+//				  "Used to reduce the time step below the upper bound.");
 //   args.AddOption(&ti, "-ti", "--initial-time",
-//                  "Beginning of time interval to simulate (ns).");
+//				  "Beginning of time interval to simulate (ns).");
 //   args.AddOption(&tf, "-tf", "--final-time",
-//                  "End of time interval to simulate (ns).");
+//				  "End of time interval to simulate (ns).");
 //   args.AddOption(&ts, "-ts", "--snapshot-time",
-//                  "Time between snapshots (ns).");
+//				  "Time between snapshots (ns).");
 //   args.AddOption(&ds_params_, "-ds", "--dielectric-sphere-params",
-//                  "Center, Radius, and Permittivity of Dielectric Sphere");
+//				  "Center, Radius, and Permittivity of Dielectric Sphere");
 //   args.AddOption(&ms_params_, "-ms", "--magnetic-shell-params",
-//                  "Center, Inner Radius, Outer Radius, and Permeability "
-//                  "of Magnetic Shell");
+//				  "Center, Inner Radius, Outer Radius, and Permeability "
+//				  "of Magnetic Shell");
 //   args.AddOption(&cs_params_, "-cs", "--conductive-sphere-params",
-//                  "Center, Radius, and Conductivity of Conductive Sphere");
+//				  "Center, Radius, and Conductivity of Conductive Sphere");
 //   args.AddOption(&dp_params_, "-dp", "--dipole-pulse-params",
-//                  "Axis End Points, Radius, Amplitude, "
-//                  "Pulse Center (ns), Pulse Width (ns)");
-    args.AddOption(&abcs, "-abcs", "--absorbing-bc-surf",
-                    "Absorbing Boundary Condition Surfaces");
-    args.AddOption(&dbcs, "-dbcs", "--dirichlet-bc-surf",
-                    "Dirichlet Boundary Condition Surfaces");
-    args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",
-                    "--no-visualization",
-                    "Enable or disable GLVis visualization.");
-    args.Parse();
-    if (!args.Good())
-    {
-        if (Mpi::Root())
-        {
-            args.PrintUsage(cout);
-        }
-        return 1;
-    }
-    if (Mpi::Root())
-    {
-        args.PrintOptions(cout);
-    }
- 
-    // Read the (serial) mesh from the given mesh file on all processors.  We can
-    // handle triangular, quadrilateral, tetrahedral, hexahedral, surface and
-    // volume meshes with the same code.
-    Mesh *serial_mesh;
-    ifstream imesh(mesh_file);
-    if (!imesh)
-    {
-        if (Mpi::Root())
-        {
-            cerr << "\nCan not open mesh file: " << mesh_file << '\n' << endl;
-        }
-        return 2;
-    }
-    serial_mesh = new Mesh(imesh, 1, 1);
-    imesh.close();
-    
-    // Refine the serial mesh on all processors to increase the resolution. In
-    // this example we do 'ref_levels' of uniform refinement.
-    for (int l = 0; l < serial_ref_levels; l++)
-    {
-        serial_mesh->UniformRefinement();
-    }
- 
-    // Define a parallel mesh by a partitioning of the serial mesh. Refine this
-    // mesh further in parallel to increase the resolution. Once the parallel
-    // mesh is defined, the serial mesh can be deleted.
-    ParMesh mesh(MPI_COMM_WORLD, *serial_mesh);
-    serial_mesh->Clear();
- 
-    // Refine this mesh in parallel to increase the resolution.
-    for (int l = 0; l < parallel_ref_levels; l++)
-    {
-        mesh.UniformRefinement();
-    }
+//				  "Axis End Points, Radius, Amplitude, "
+//				  "Pulse Center (ns), Pulse Width (ns)");
+	args.AddOption(&abcs, "-abcs", "--absorbing-bc-surf",
+					"Absorbing Boundary Condition Surfaces");
+	args.AddOption(&dbcs, "-dbcs", "--dirichlet-bc-surf",
+					"Dirichlet Boundary Condition Surfaces");
+	args.AddOption(&visualization, "-vis", "--visualization", "-no-vis",
+					"--no-visualization",
+					"Enable or disable GLVis visualization.");
+	args.Parse();
+	if (!args.Good())
+	{
+		args.PrintUsage(cout);
+		return 1;
+	}
+	args.PrintOptions(cout);
+	// Read the (serial) mesh from the given mesh file on all processors.  We can
+	// handle triangular, quadrilateral, tetrahedral, hexahedral, surface and
+	// volume meshes with the same code.
+	ifstream imesh(mesh_file);
+	if (!imesh)
+	{
+		cerr << "\nCan not open mesh file: " << mesh_file << '\n' << endl;
+		return 2;
+	}
+	Mesh mesh(imesh, 1, 1);
+	imesh.close();
+	mesh.SetCurvature(1); // needed for interpolation at physical points
 
-    /********************** program *********************/
-    
-    // FE space for magnetix field
-    ND_FECollection B_fec(sOrder, mesh.Dimension());
-    ParFiniteElementSpace B_fespace(&mesh, &B_fec);
-    HYPRE_BigInt B_num_dofs = B_fespace.GlobalTrueVSize();
+	// Refine the serial mesh on all processors to increase the resolution. In
+	// this example we do 'ref_levels' of uniform refinement.
+	for (int l = 0; l < serial_ref_levels; l++)
+	{
+		mesh.UniformRefinement();
+	}
 
-    // FE space for magnetic field
-    L2_FECollection E_fec(sOrder, mesh.Dimension());
-    ParFiniteElementSpace E_fespace(&mesh, &E_fec);
-    HYPRE_BigInt E_num_dofs = E_fespace.GlobalTrueVSize();
 
-    if (Mpi::Root())
-    {
-        cout << "Number of E field unknowns: " << E_num_dofs << endl
-            << "Number of B field unknowns: " << B_num_dofs << endl;
-    }
-    
-    // get E field boundaries
-    Array<int> E_dirichlet_boundary_dofs, E_neumann_1_boundary_dofs, E_neumann_2_boundary_dofs;
-    E_fespace.GetBoundaryTrueDofs(E_dirichlet_boundary_dofs, 1); // 1: dirichlet boundaries
-    E_fespace.GetBoundaryTrueDofs(E_neumann_1_boundary_dofs, 2); // 2: first port
-    E_fespace.GetBoundaryTrueDofs(E_neumann_2_boundary_dofs, 3); // 3: second port
-    
-    // get B field boundaries
-    // maybe not needed, for now, no absrobing boundaries
-    Array<int> B_dirichlet_boundary_dofs, B_neumann_1_boundary_dofs, B_neumann_2_boundary_dofs;
-    B_fespace.GetBoundaryTrueDofs(B_dirichlet_boundary_dofs, 1); // 1: dirichlet boundaries
-    B_fespace.GetBoundaryTrueDofs(B_neumann_1_boundary_dofs, 2); // 2: first port
-    B_fespace.GetBoundaryTrueDofs(B_neumann_2_boundary_dofs, 3); // 3: second port
+	// program, for now only 2-dimensional meshes
+	int dim = 2;
 
-    // 
+	FunctionCoefficient muInvCoef(muInvFunc); // time-DEPENDENT
 
-    /******************* program vége *******************/
 
-    return 0;
+	// define E FESpace: H1 continous scalar valued elements
+	// also used for J and sigmaE
+	H1_FECollection E_fec(order, dim);
+	FiniteElementSpace E_fespace(&mesh, &E_fec);
+
+	// define B FESpace: edge elements
+	ND_FECollection B_fec(order, dim);
+	FiniteElementSpace B_fespace(&mesh, &B_fec);
+
+	// define rotE = (-dB/dt) operator
+	MixedBilinearForm rotE(&E_fespace, &B_fespace);
+	rotE.AddDomainIntegrator(new MixedScalarWeakCurlIntegrator); // itt lehet egy coeffitient
+	rotE.SetAssemblyLevel(AssemblyLevel::FULL);
+	rotE.Assemble();
+	rotE.Finalize();
+
+	// define rotB = (mu*(J+sigmaE+dD/dt))
+	MixedBilinearForm rotB(&B_fespace, &E_fespace);
+	rotB.AddDomainIntegrator(new MixedScalarCurlIntegrator(muInvCoef)); // itt is lehet egy coef
+	rotB.SetAssemblyLevel(AssemblyLevel::FULL);
+	rotB.Assemble();
+	rotB.Finalize();
+
+	// grid functions
+	GridFunction E(&E_fespace);
+	//GridFunction J(&E_fespace);
+	GridFunction B(&B_fespace);
+	E = 0.0;
+	B = 0.0;
+//	J = 0.0;
+
+	FunctionCoefficient InitialEFieldCoef(EFieldFunc); // time-independent
+//	FunctionCoefficient JFieldCoef(JFieldFunc); // time-DEPENDENT
+	VectorFunctionCoefficient InitialBFieldCoef(dim, BFieldFunc); // time-independent
+
+	// set initial fields
+	E.ProjectCoefficient(InitialEFieldCoef);
+//	J.ProjectCoefficient(JFieldCoef);
+	B.ProjectCoefficient(InitialBFieldCoef);
+
+	Vector pos(2);
+	pos[0] = 0.1; pos[1] = 0.1;
+	cout << "E0(x=0.1,y=0.1)" << EFieldFunc(pos) << endl;
+	cout << "E(x=0.1,y=0.1)" << EFieldFunc(pos) << endl;
+
+	FindPointsGSLIB interp;
+	interp.Setup(mesh);
+	interp.FreeData();
+//	printf("%d",E.GetNodes());
+
+	// step time
+	Vector e, b;
+	E.GetTrueDofs(e);
+	B.GetTrueDofs(b);
+	Vector dedt(e.Size()), dbdt(b.Size());
+	dedt=0.0;
+	dbdt=0.0;
+
+	cout << "e.Size(): " << e.Size() << endl;
+	cout << "b.Size(): " << b.Size() << endl;
+	cout << "rotE.Height(): " << rotE.Height() << endl;
+	cout << "rotB.Height(): " << rotB.Height() << endl;
+	cout << "rotE.Width(): " << rotE.Width() << endl;
+	cout << "rotB.Width(): " << rotB.Width() << endl;
+
+	rotE.Mult(e, dbdt);
+	E.SetFromTrueDofs(dedt);
+	rotB.Mult(dbdt, dedt);
+	B.SetFromTrueDofs(dbdt);
+
+	// save fields
+	E.Save("E.gf");
+	B.Save("B.gf");
+
+	// save mesh
+	mesh.Save("mesh.mesh");
+
+//	delete mesh;
+	return 0;
 }
+
+// initial E field based on position "x"
+double
+EFieldFunc(const Vector &x)
+{
+   return sin(x[0])*sin(x[1]);
+}
+
+// J field based on position "x" and time "t"
+double
+JFieldFunc(const Vector &x, double t)
+{
+   return 0.0;
+}
+
+// initial B field based on position "x"
+void
+BFieldFunc(const Vector &x, Vector &B)
+{
+	B.SetSize(2);
+	B = 0.0;
+//	B[0] = (x[1]-1.0)/10.0;
+//	B[1] = (x[0]-1.0)/10.0;
+}
+
+// permeability based on position "x"
+double
+muInvFunc(const Vector &x)
+{
+	return 1/MU0;
+}
+

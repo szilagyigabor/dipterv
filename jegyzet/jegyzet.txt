@@ -32,3 +32,19 @@ vagy
 
 2023.04.27.
 ...
+
+2023.05.04.
+Lehet ToDenseMatrix() függvénnyel sparse -> dense átalakítást csinálni. Nice. MixedScalarWeakCurlIntegrator lesz a rot(skalár E) -> vektor B rot operátor 2D-ben. Ha jól értem, az operátor iránya: trial space -> test space. A másik irány, vagyis a rot(vektor B) -> E operátornak használható a MixedScalarCurlIntegrator elvileg.
+Mi az a Mass Matrix?
+
+2023.05.10.
+Vészhelyzeti üzemmód. Holnapig el kell dönteni, hogy mit lehet tenni MFEM-mel. Ma beszéltem Bilicz-cel, ezekre jutottunk:
+	- az ABC előírása tápvonalban valószínűleg kb lehetetlen, még PML-lel is, mert a csőtápvonal hullámimpedanciája módusfüggő és frekvenciafüggő. Ehelyett úgy kéne csinálni, hogy hosszú tápvonal van és nem várjuk meg, amíg végigér rajta a hullám, hanem egy-egy közbülső keresztmetszeti felület a tápvonal virtuális eleje és vége
+Amire én jutottam:
+	- MFEM-ben működik az időfüggő gerjesztés a falról
+	- nem találtam meg, hogyan kell egy adott pontban kiértékelni a teret, ami elég nevetséges
+
+2023.05.11.
+ - Megtaláltam kb, hogy hogyan kell egy adott pontban kiértékelni a teret, de elég bonyolult. Meg kell találni, hogy melyik elemben van a pont, aztán hogy annak az elemnek mi a transzformációja, ami a referencia elemet abba viszi (vagy fordítva, már nem tudom), aztán az egyik GetValue függvénnyel lehet elvileg kinyerni az értéket, ha skalár, de vektorra más kell.
+ - Találtam egy FindPoints() nevű függvényt, ami elem ID-ket, inverz transzformációkat és referenciatérbeli IntegrationPoint-okat ad vissza. Ezekkel talán lehet függvényt kiértékelni adott pontban.
+ - Van egy ilyen függvény a mátrixoknál, hogy AddMult(), ezzel lehet ilyet csinálni: y += A*x*alpha, ahol alpha egy opcionális skalártényező.
